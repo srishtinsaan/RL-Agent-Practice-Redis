@@ -1,0 +1,836 @@
+{
+  "annotations": [
+    {
+      "kind": "AnnotationQuery",
+      "spec": {
+        "builtIn": true,
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "query": {
+          "datasource": {
+            "name": "-- Grafana --"
+          },
+          "group": "grafana",
+          "kind": "DataQuery",
+          "spec": {},
+          "version": "v0"
+        }
+      }
+    }
+  ],
+  "cursorSync": "Off",
+  "editable": true,
+  "elements": {
+    "panel-1": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "ffojehovd6j9cc"
+                    },
+                    "group": "prometheus",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "editorMode": "builder",
+                      "exemplar": false,
+                      "expr": "rl_episode_table",
+                      "format": "table",
+                      "instant": true,
+                      "legendFormat": "__auto",
+                      "range": false
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": [
+              {
+                "group": "filterFieldsByName",
+                "kind": "Transformation",
+                "spec": {
+                  "options": {
+                    "include": {
+                      "names": [
+                        "discounted_g",
+                        "episode",
+                        "epsilon",
+                        "total_reward"
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "group": "convertFieldType",
+                "kind": "Transformation",
+                "spec": {
+                  "options": {
+                    "conversions": [
+                      {
+                        "destinationType": "number",
+                        "targetField": "discounted_g"
+                      },
+                      {
+                        "destinationType": "number",
+                        "targetField": "episode"
+                      },
+                      {
+                        "destinationType": "number",
+                        "targetField": "epsilon"
+                      },
+                      {
+                        "destinationType": "number",
+                        "targetField": "total_reward"
+                      }
+                    ],
+                    "fields": {}
+                  }
+                }
+              },
+              {
+                "group": "organize",
+                "kind": "Transformation",
+                "spec": {
+                  "options": {
+                    "excludeByName": {},
+                    "includeByName": {},
+                    "indexByName": {
+                      "discounted_g": 1,
+                      "episode": 0,
+                      "epsilon": 2,
+                      "total_reward": 3
+                    },
+                    "renameByName": {}
+                  }
+                }
+              },
+              {
+                "group": "sortBy",
+                "kind": "Transformation",
+                "spec": {
+                  "options": {
+                    "fields": {},
+                    "sort": [
+                      {
+                        "desc": true,
+                        "field": "episode"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "description": "",
+        "id": 1,
+        "links": [],
+        "title": "Episode Logs",
+        "vizConfig": {
+          "group": "table",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "custom": {
+                  "align": "center",
+                  "cellOptions": {
+                    "type": "auto"
+                  },
+                  "footer": {
+                    "reducers": []
+                  },
+                  "inspect": false
+                },
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "options": {
+              "cellHeight": "sm",
+              "showHeader": true
+            }
+          },
+          "version": "13.0.2"
+        }
+      }
+    },
+    "panel-2": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "ffoioke0jlo1sc"
+                    },
+                    "group": "prometheus",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "editorMode": "builder",
+                      "exemplar": false,
+                      "expr": "ovs_fdb_entry_age",
+                      "format": "table",
+                      "instant": true,
+                      "legendFormat": "__auto",
+                      "range": false
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": [
+              {
+                "group": "filterFieldsByName",
+                "kind": "Transformation",
+                "spec": {
+                  "options": {
+                    "include": {
+                      "names": [
+                        "mac",
+                        "port",
+                        "vlan",
+                        "Value"
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "group": "sortBy",
+                "kind": "Transformation",
+                "spec": {
+                  "options": {
+                    "fields": {},
+                    "sort": [
+                      {
+                        "desc": true,
+                        "field": "Value"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "group": "organize",
+                "kind": "Transformation",
+                "spec": {
+                  "options": {
+                    "excludeByName": {},
+                    "includeByName": {},
+                    "indexByName": {},
+                    "renameByName": {
+                      "Value": "Age",
+                      "mac": "MAC Address",
+                      "port": "Port",
+                      "vlan": "VLAN id"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "description": "",
+        "id": 2,
+        "links": [],
+        "title": "MAC-Table g0_s1",
+        "vizConfig": {
+          "group": "table",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "custom": {
+                  "align": "center",
+                  "cellOptions": {
+                    "type": "auto"
+                  },
+                  "footer": {
+                    "reducers": []
+                  },
+                  "inspect": false
+                },
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "options": {
+              "cellHeight": "sm",
+              "showHeader": true
+            }
+          },
+          "version": "13.0.2"
+        }
+      }
+    },
+    "panel-4": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "dfojlz6ivzim8f"
+                    },
+                    "group": "prometheus",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "editorMode": "builder",
+                      "exemplar": false,
+                      "expr": "rl_live_step_table",
+                      "format": "table",
+                      "instant": true,
+                      "interval": "",
+                      "legendFormat": "__auto",
+                      "range": false
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": [
+              {
+                "group": "filterFieldsByName",
+                "kind": "Transformation",
+                "spec": {
+                  "options": {
+                    "include": {
+                      "names": [
+                        "action_name",
+                        "age_score",
+                        "chosen_by",
+                        "currently_blocked",
+                        "episode",
+                        "epsilon",
+                        "evicted_mac",
+                        "executed_action",
+                        "flood_pressure",
+                        "mac_count",
+                        "mac_fill",
+                        "new_age",
+                        "new_flood",
+                        "new_mac_fill",
+                        "old_age",
+                        "old_flood",
+                        "old_mac_fill",
+                        "original_action",
+                        "outcome",
+                        "port_acted",
+                        "q_block",
+                        "q_dec_age",
+                        "q_evict",
+                        "q_flood",
+                        "q_inc_age",
+                        "q_learn",
+                        "q_unblock",
+                        "reward",
+                        "situation",
+                        "state_index",
+                        "step",
+                        "total_ep_reward"
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "group": "convertFieldType",
+                "kind": "Transformation",
+                "spec": {
+                  "options": {
+                    "conversions": [
+                      {
+                        "destinationType": "number",
+                        "targetField": "episode"
+                      },
+                      {
+                        "destinationType": "number",
+                        "targetField": "step"
+                      }
+                    ],
+                    "fields": {}
+                  }
+                }
+              },
+              {
+                "group": "sortBy",
+                "kind": "Transformation",
+                "spec": {
+                  "options": {
+                    "fields": {},
+                    "sort": [
+                      {
+                        "desc": true,
+                        "field": "step"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "group": "sortBy",
+                "kind": "Transformation",
+                "spec": {
+                  "options": {
+                    "fields": {},
+                    "sort": [
+                      {
+                        "desc": true,
+                        "field": "episode"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "group": "organize",
+                "kind": "Transformation",
+                "spec": {
+                  "options": {
+                    "excludeByName": {},
+                    "includeByName": {},
+                    "indexByName": {
+                      "action_name": 10,
+                      "age_score": 5,
+                      "chosen_by": 18,
+                      "currently_blocked": 24,
+                      "episode": 0,
+                      "epsilon": 22,
+                      "evicted_mac": 25,
+                      "executed_action": 9,
+                      "flood_pressure": 4,
+                      "mac_count": 3,
+                      "mac_fill": 2,
+                      "new_age": 31,
+                      "new_flood": 29,
+                      "new_mac_fill": 27,
+                      "old_age": 30,
+                      "old_flood": 28,
+                      "old_mac_fill": 26,
+                      "original_action": 8,
+                      "outcome": 19,
+                      "port_acted": 23,
+                      "q_block": 14,
+                      "q_dec_age": 17,
+                      "q_evict": 12,
+                      "q_flood": 13,
+                      "q_inc_age": 16,
+                      "q_learn": 11,
+                      "q_unblock": 15,
+                      "reward": 20,
+                      "situation": 6,
+                      "state_index": 7,
+                      "step": 1,
+                      "total_ep_reward": 21
+                    },
+                    "renameByName": {}
+                  }
+                }
+              },
+              {
+                "group": "limit",
+                "kind": "Transformation",
+                "spec": {
+                  "options": {
+                    "limitField": "150"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "description": "",
+        "id": 4,
+        "links": [],
+        "title": "Episode-Step-Logs",
+        "vizConfig": {
+          "group": "table",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "custom": {
+                  "align": "center",
+                  "cellOptions": {
+                    "type": "auto"
+                  },
+                  "footer": {
+                    "reducers": []
+                  },
+                  "inspect": false,
+                  "wrapText": false
+                },
+                "fieldMinMax": false,
+                "min": 1000,
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "options": {
+              "cellHeight": "sm",
+              "maxRowHeight": 1000,
+              "showHeader": true,
+              "sortBy": [
+                {
+                  "desc": false,
+                  "displayName": "mac_count"
+                }
+              ]
+            }
+          },
+          "version": "13.0.2"
+        }
+      }
+    },
+    "panel-5": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "ffojehovd6j9cc"
+                    },
+                    "group": "prometheus",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "editorMode": "builder",
+                      "exemplar": false,
+                      "expr": "rl_live_step_table",
+                      "format": "table",
+                      "instant": true,
+                      "legendFormat": "__auto",
+                      "range": false
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": [
+              {
+                "group": "filterFieldsByName",
+                "kind": "Transformation",
+                "spec": {
+                  "options": {
+                    "include": {
+                      "names": [
+                        "episode",
+                        "q_block",
+                        "q_dec_age",
+                        "q_evict",
+                        "q_flood",
+                        "q_inc_age",
+                        "q_learn",
+                        "q_unblock",
+                        "step"
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "group": "convertFieldType",
+                "kind": "Transformation",
+                "spec": {
+                  "options": {
+                    "conversions": [
+                      {
+                        "destinationType": "number",
+                        "targetField": "episode"
+                      },
+                      {
+                        "destinationType": "number",
+                        "targetField": "step"
+                      }
+                    ],
+                    "fields": {}
+                  }
+                }
+              },
+              {
+                "group": "organize",
+                "kind": "Transformation",
+                "spec": {
+                  "options": {
+                    "excludeByName": {},
+                    "includeByName": {},
+                    "indexByName": {
+                      "episode": 0,
+                      "q_block": 5,
+                      "q_dec_age": 8,
+                      "q_evict": 4,
+                      "q_flood": 2,
+                      "q_inc_age": 7,
+                      "q_learn": 3,
+                      "q_unblock": 6,
+                      "step": 1
+                    },
+                    "renameByName": {}
+                  }
+                }
+              },
+              {
+                "group": "sortBy",
+                "kind": "Transformation",
+                "spec": {
+                  "options": {
+                    "fields": {},
+                    "sort": [
+                      {
+                        "desc": true,
+                        "field": "episode"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "group": "sortBy",
+                "kind": "Transformation",
+                "spec": {
+                  "options": {
+                    "fields": {},
+                    "sort": [
+                      {
+                        "desc": true,
+                        "field": "step"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "description": "",
+        "id": 5,
+        "links": [],
+        "title": "Q-Table",
+        "vizConfig": {
+          "group": "table",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {
+                "custom": {
+                  "align": "center",
+                  "cellOptions": {
+                    "type": "auto"
+                  },
+                  "footer": {
+                    "reducers": []
+                  },
+                  "inspect": false
+                },
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "options": {
+              "cellHeight": "sm",
+              "showHeader": true,
+              "sortBy": [
+                {
+                  "desc": true,
+                  "displayName": "episode"
+                }
+              ]
+            }
+          },
+          "version": "13.0.2"
+        }
+      }
+    }
+  },
+  "layout": {
+    "kind": "GridLayout",
+    "spec": {
+      "items": [
+        {
+          "kind": "GridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-1"
+            },
+            "height": 17,
+            "width": 12,
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "kind": "GridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-2"
+            },
+            "height": 17,
+            "width": 12,
+            "x": 12,
+            "y": 0
+          }
+        },
+        {
+          "kind": "GridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-4"
+            },
+            "height": 17,
+            "width": 24,
+            "x": 0,
+            "y": 17
+          }
+        },
+        {
+          "kind": "GridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-5"
+            },
+            "height": 15,
+            "width": 24,
+            "x": 0,
+            "y": 34
+          }
+        }
+      ]
+    }
+  },
+  "links": [],
+  "liveNow": false,
+  "preferences": {
+    "layout": {
+      "kind": "GridLayout",
+      "spec": {
+        "items": []
+      }
+    }
+  },
+  "preload": false,
+  "tags": [],
+  "timeSettings": {
+    "autoRefresh": "5s",
+    "autoRefreshIntervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "fiscalYearStartMonth": 0,
+    "from": "now-1s",
+    "hideTimepicker": false,
+    "timezone": "browser",
+    "to": "now"
+  },
+  "title": "MAC-Episode-Step",
+  "variables": []
+}

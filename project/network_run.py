@@ -19,7 +19,7 @@ try:
     #     print(h.name)
 
     # get info about port
-    # info = discover_switch_ports(net, "g0_s1")
+    info = discover_switch_ports(net, "g0_s1")
     
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     SAVE_PATH = os.path.join(BASE_DIR, "rl", "topology_info.json")

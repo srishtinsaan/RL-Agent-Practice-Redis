@@ -49,13 +49,13 @@ def action_evict_entry(sw, flood_pressure):
 def init_lru_eviction(mac_entries):
     if not mac_entries:
         return None, None
-    stale_mac, stale_entry = max(mac_entries, key=lambda x: x[1].get("age", 0))
+    stale_mac, stale_entry = max(mac_entries.items(), key=lambda x: x[1].get("age", 0))  # ← .items()
     return stale_mac, stale_entry
 
 def init_lfu_eviction(mac_entries):
     if not mac_entries:
         return None, None
-    stale_mac, stale_entry = min(mac_entries, key=lambda x: x[1].get("seen_count", 0))
+    stale_mac, stale_entry = min(mac_entries.items(), key=lambda x: x[1].get("seen_count", 0))  # ← .items()
     return stale_mac, stale_entry
 
 def action_increase_aging(sw):

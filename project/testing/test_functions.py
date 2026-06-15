@@ -31,19 +31,19 @@
 # from project.rl.action_definition import action_evict_entry
 
 
-# from project.rl.action_definition import (
-#     action_increase_aging, 
-#     action_decrease_aging
-#     , action_evict_entry,
-#     action_rebalance_table
-#     )
+from project.rl.action_definition import (
+    action_increase_aging, 
+    action_decrease_aging
+    , action_evict_entry,
+    action_rebalance_table
+    )
 
 
 if __name__ == "__main__":
     sw = "g0_s1"
     
-    # action_increase_aging(sw)
-    # action_decrease_aging(sw)
+    action_increase_aging(sw)
+    action_decrease_aging(sw)
     # action_evict_entry(sw, policy="LFU")
     # action_evict_entry(sw, policy="LRU")
 

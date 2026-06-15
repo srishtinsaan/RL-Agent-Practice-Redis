@@ -6,10 +6,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from project.get_data import (
-    get_normalized_state,
-    mac_fill,
-    flood_pressure,
-    get_ageScore,
+    get_normalized_state
 )
 
 from project.rl.action_definition import execute_action
@@ -67,10 +64,21 @@ class LiveEnv:
 
     #
     # Guard:
-    #
-        # if action in [0, 1] and state_info["mac_fill"] < 0.20:
-        #     print("[GUARD] Table too small for eviction")
-        #     action = 2  # increase aging instead
+    #   
+
+        # Don't evict when table is nearly empty
+        if action == 0 and state_info["mac_fill"] < 0.20:
+            action = 2  # switch to increase aging
+
+        if action == 1 and state_info["flood_pressure"] > 0.6:
+            action = 0  # evict instead
+
+        if action == 2 and state_info["mac_fill"] >= 0.95:
+            action = 0  # evict instead
+
+        # Don't rebalance when table is nearly empty
+        if action == 3 and state_info["mac_fill"] < 0.20:
+            action = 1  # increase aging instead
 
         executed_action = action
 
@@ -109,20 +117,6 @@ class LiveEnv:
 
         )
 
-        
-
-        
-
-        
-
-    #
-    # Penalty if eviction found nothing
-    #
-        # if (
-        #     executed_action in [0, 1]
-        #     and result is None
-        # ):
-        #     reward -= 1.0
 
         info = {
             "action_name":     ActionSpace.get_action_name(executed_action),

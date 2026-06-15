@@ -7,17 +7,16 @@ def get_reward(
     new_age,
     action
 ):
-    TARGET = 10  # MAC entries
+    
 
-
+    fill_gain = old_fill - new_fill
     flood_gain = old_flood - new_flood
     age_gain = old_age - new_age
 
-    fill_error = abs(new_fill - TARGET)
 
     reward = (
         50 * flood_gain +
-        10 * (-fill_error) +   
+        10 * fill_gain +   
         5 * age_gain
     )
 

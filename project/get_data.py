@@ -29,7 +29,7 @@ ZSET_KEY = "mac_age"
 SWITCH = "g0_s1"
 DEFAULT_AGE = 300
 DEFAULT_SIZE = 20
-MAX_MAC_CAPACITY = 24
+MAX_MAC_CAPACITY = 28
 
 
 previous_snapshot = {}
@@ -207,6 +207,8 @@ def normalize(value, max_value):
 
 def get_normalized_state(sw, prev_entries=None):
     mac_entries = get_mac_table(sw)
+
+    print(f"[DEBUG] sw={sw} redis_count={r.hlen(HASH_KEY)}")
 
     mac_fill_val = normalize(len(mac_entries), MAX_MAC_CAPACITY)
 

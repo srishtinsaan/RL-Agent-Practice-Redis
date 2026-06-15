@@ -9,9 +9,7 @@ r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
 with open("stat.csv", 'w', newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(['Occupancy',
-            'Flood',
-            'Age']) 
+        writer.writerow(['Occupancy', 'Flood', 'Age']) 
         
 HASH_KEY = "mac_table"
 ZSET_KEY = "mac_age"
@@ -20,10 +18,10 @@ ZSET_KEY = "mac_age"
 SWITCH = "g0_s1"
 DEFAULT_AGE = 300
 DEFAULT_SIZE = 20
+MAX_MAC_CAPACITY = 24
 
-avg_age=0
+
 previous_snapshot = {}
-
 
 # Helper Function
 def run_cmd(cmd):
@@ -38,7 +36,6 @@ def run_cmd(cmd):
         print("STDERR:", e.stderr)
 
         return None
-
 
 def get_mac_table(sw_name):
     cmd = f"ovs-appctl fdb/show {sw_name}"
@@ -76,9 +73,8 @@ def get_mac_table(sw_name):
     #print(entries)
     return entries
 
-
 def update():
-    global avg_age
+    avg_age = 0
 
     mac_entries = get_mac_table(SWITCH)
     pipe = r.pipeline()
@@ -125,24 +121,24 @@ def update():
 
     pipe.execute()
 
-
 def print_table():
     print("\033c")
+    mac_entries = get_mac_table(SWITCH)
 
     all_data = {
         mac: json.loads(val)
         for mac, val in r.hgetall(HASH_KEY).items()
     }
 
-    fill = mac_fill()
-    fpressure = flood_pressure()
-    agescore = get_ageScore()
+    fill = mac_fill(mac_entries)
+    fpressure = flood_pressure(mac_entries)
+    agescore = get_ageScore(mac_entries)
 
     print(
             f"\nCurrent MAC Table, "
-            f"Age Score: {agescore:.3f}, "
             f"Table Fill: {fill:.3f}, "
-            f"Flood Pressure: {fpressure:.3f}"
+            f"Flood Pressure: {fpressure:.3f}, "
+            f"Age Score: {agescore:.3f}, "
         )
     print(f"{'MAC':<25} {'PORT':<10} {'AGE':<10} {'seen_count':<10}")
     print("-" * 60)
@@ -160,23 +156,25 @@ def print_table():
         if data:
             print(f"{data.get('port', ''):<10} {mac:<25} {data.get('age', 0):<10} {data.get('seen_count', 0):<10}")
 
-def get_ageScore() -> float:
-    return round(avg_age/DEFAULT_AGE, 3)
+def get_ageScore(mac_entries):
+    if not mac_entries:
+        return 0.0
 
-def mac_fill() -> float:
-    count = r.zcard("mac_age")
-    return round(count/DEFAULT_SIZE,3)
+    avg_age = sum(e["age"] for e in mac_entries.values()) / len(mac_entries)
 
-def flood_pressure() -> float:
+    return normalize(avg_age, DEFAULT_AGE)
+
+def mac_fill(mac_entries):
+    return normalize(len(mac_entries), MAX_MAC_CAPACITY)
+
+def flood_pressure(new_entries):
     global previous_snapshot
 
-    new_entries = get_mac_table(SWITCH)
-
+    # previous snapshot (t-1)
     prev_macs = set(previous_snapshot.keys())
-    #print(prev_macs)
-    
+
+    # current snapshot (t)
     new_macs = set(new_entries.keys())
-    #print(new_macs)
 
     total = len(new_macs)
     if total == 0:
@@ -190,19 +188,19 @@ def flood_pressure() -> float:
 
     return round(flood / total, 3)
 
+def normalize(value, max_value):
+    if max_value == 0:
+        return 0
+    return round(min(value / max_value, 1.0), 4)
 
+if __name__ == "__main__":
+    running = True
+    try:
+        while running:
+            previous_snapshot = get_mac_table(SWITCH)
+            time.sleep(1)
+            update()
+            print_table()
 
-running = True
-try:
-    while running:
-        previous_snapshot = get_mac_table(SWITCH)   # SAVE OLD STATE
-        time.sleep(1)
-        update()                                     # overwrite Redis
-        current_snapshot = get_mac_table(SWITCH)
-        print_table()
-        #print("MAC table stored successfully")
-        # action_increase_aging()
-
-except KeyboardInterrupt:
-    running = False
-    print("You Exit!!!")
+    except KeyboardInterrupt:
+        print("You Exit!!!")

@@ -150,8 +150,7 @@ def run_live_training(switch='g0_s0', episodes=200, steps_per_ep=30):
             agent.update(state_idx, executed_action, reward, next_state_idx)
 
             q_values     = agent.get_q_values(state_idx)
-            state_idx    = next_state_idx
-            state_info   = next_state_info
+            
             total_reward += reward
             episode_rewards.append(reward) #for discounted reward
 
@@ -200,16 +199,21 @@ def run_live_training(switch='g0_s0', episodes=200, steps_per_ep=30):
                     next_state_info["avg_age"]
                 ])
 
-                state_info = next_state_info
 
             with open(qtable_path, 'a', newline='') as f:
                 writer = csv.writer(f)
-                writer.writerow([
-                    round(q_values[0], 4),
-                    round(q_values[1], 4),
-                    round(q_values[2], 4),
-                    round(q_values[3], 4),
-                ])
+                writer.writerow(
+                    [
+                        round(q_values[0], 4),
+                        round(q_values[1], 4),
+                        round(q_values[2], 4),
+                        round(q_values[3], 4),
+                    ]
+                )
+
+
+            state_idx    = next_state_idx
+            state_info   = next_state_info
 
             print(
                 f"  Ep {ep+1} | Step {step+1} | "

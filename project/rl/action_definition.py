@@ -1,6 +1,7 @@
 import subprocess
 import redis
 import json
+import time
 
 from project.get_data import (
     get_mac_table,       
@@ -11,6 +12,7 @@ r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 AGING_HIGH = 600
 AGING_LOW  = 60
 
+SUPPRESSED_KEY = "suppressed_macs"
 HASH_KEY = "mac_table"
 ZSET_KEY = "mac_age"
 
@@ -25,30 +27,56 @@ def run_cmd(cmd):
         print("STDERR:", e.stderr)
         return None
 
+def get_suppressed_set():
+    return {m.lower() for m in r.smembers(SUPPRESSED_KEY)}
+
 def _delete_from_redis(mac):
     pipe = r.pipeline()
+
+    # remove from active state
     pipe.hdel(HASH_KEY, mac)
     pipe.zrem(ZSET_KEY, mac)
+
+    # suppress so it won't be re-imported from OVS
+    pipe.sadd(SUPPRESSED_KEY, mac)
+
     pipe.execute()
-    print(f"[EVICT] Deleted {mac} from Redis")
+
+    print(f"[EVICT] {mac} removed + suppressed")
 
 def sync_redis_from_ovs(sw):
-    """Sync OVS FDB → Redis, preserving seen_count"""
     mac_entries = get_mac_table(sw)
     pipe = r.pipeline()
 
+    # 🔥 snapshot (ONE TIME READ)
+    suppressed = get_suppressed_set()
+
+    filtered = {}
+
     for mac, entry in mac_entries.items():
+
+        mac = mac.lower()   # normalize (IMPORTANT)
+
+        # ❌ DO NOT call is_suppressed()
+        if mac in suppressed:
+            continue
+
         stored = r.hget(HASH_KEY, mac)
+
         if stored:
             stored_data = json.loads(stored)
             entry["seen_count"] = stored_data.get("seen_count", 1)
         else:
             entry["seen_count"] = 1
+
+        filtered[mac] = entry
+
         pipe.hset(HASH_KEY, mac, json.dumps(entry))
         pipe.zadd(ZSET_KEY, {mac: entry["age"]})
 
     pipe.execute()
-    return mac_entries
+
+    return filtered
 
 def action_evict_entry(sw, flood_pressure):
     mac_entries = sync_redis_from_ovs(sw)   # ← sync first so seen_count exists

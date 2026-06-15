@@ -24,13 +24,16 @@ STAT_CSV = os.path.join(STATS_DIR, "stat.csv")
         
 HASH_KEY = "mac_table"
 ZSET_KEY = "mac_age"
+SUPPRESSED_KEY = "suppressed_macs"
+REJOIN_THRESHOLD = 3
 
 
 SWITCH = "g0_s1"
 DEFAULT_AGE = 300
-DEFAULT_SIZE = 20
+DEFAULT_SIZE = 10
 MAX_MAC_CAPACITY = 28
 
+r.set("mac_aging_limit", DEFAULT_AGE)
 
 previous_snapshot = {}
 
@@ -93,17 +96,34 @@ def update():
     old_macs = set(r.hkeys(HASH_KEY))
     new_macs = set(mac_entries.keys())
 
+    suppressed = r.smembers(SUPPRESSED_KEY)
     # 1. ADD / UPDATE ENTRIES
     for mac, entry in mac_entries.items():
+
+        # Suppression Policy
+        if mac in suppressed:
+            if entry["age"] <= REJOIN_THRESHOLD:
+
+                r.srem(SUPPRESSED_KEY, mac)
+
+                print(f"[REJOIN] {mac} allowed back (age={entry['age']})")
+
+                # IMPORTANT: DO NOT continue
+                # let it go into normal Redis update flow
+
+            else:
+                continue
+
+        # Existing Logic
         stored = r.hget(HASH_KEY, mac)
 
         if stored:
+
             stored = json.loads(stored)
 
             old_age = stored.get("age", entry["age"])
             seen_count = stored.get("seen_count", 1)
 
-            # Detect refresh
             if entry["age"] <= old_age:
                 seen_count += 1
 
@@ -173,8 +193,10 @@ def get_ageScore(mac_entries):
         return 0.0
 
     avg_age = sum(e["age"] for e in mac_entries.values()) / len(mac_entries)
-
-    return normalize(avg_age, DEFAULT_AGE)
+    
+    #When increase and decrease age works
+    current_timeout = int(r.get("mac_aging_limit"))
+    return normalize(avg_age, current_timeout)
 
 def mac_fill(mac_entries):
     return normalize(len(mac_entries), MAX_MAC_CAPACITY)

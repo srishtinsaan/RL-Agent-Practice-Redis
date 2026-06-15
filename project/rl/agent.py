@@ -3,7 +3,7 @@ import random
 from project.rl.actions import ActionSpace
 
 class QAgent:
-    def __init__(self, states, actions=7, alpha=0.1, gamma=0.99):
+    def __init__(self, states, actions=4, alpha=0.1, gamma=0.99):
 
         # alpha = 0.1
         # gamma = 0.99
@@ -18,7 +18,7 @@ class QAgent:
 
     def choose_action_with_flag(self, state):
         if random.uniform(0, 1) < self.epsilon:
-            return True, random.randint(0, 6)    # is_random=True
+            return True, random.randint(0, 3)    # is_random=True
         return False, np.argmax(self.q_table[state])  # is_random=False
 
     def update(self, s, a, r, s_next):

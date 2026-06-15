@@ -15,7 +15,7 @@ class LiveStateEncoder:
     def get_state_index(self, state_info):
         mac_bin = self.binning(state_info["mac_fill"])
         flood_bin = self.binning(state_info["flood_pressure"])
-        age_bin = self.binning(state_info["age_score"])
+        age_bin = self.binning(state_info["avg_age"])
 
         state_index = (
             mac_bin * self.bins * self.bins
@@ -45,3 +45,6 @@ class LiveStateEncoder:
 
     def total_states(self):
         return self.bins ** 3
+    
+    def decode_state_index(self, state_idx):
+        return self.state_space[state_idx]

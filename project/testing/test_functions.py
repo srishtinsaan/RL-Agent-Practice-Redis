@@ -1,7 +1,6 @@
 # MONITOR 
 # 1. get_mac_table_entries
 
-# from project.monitor import get_mac_table_entries
 # entries = get_mac_table_entries("g0_s1")
 # print(entries)
 
@@ -21,8 +20,7 @@
 # print(entries)
 
 # 4. monitor function : write data in output/network_stats.csv
-from project.monitor import monitor
-from project.rl.env import LiveEnv
+# from project.rl.env import LiveEnv
 
 
 
@@ -33,18 +31,17 @@ from project.rl.env import LiveEnv
 # from project.rl.action_definition import action_evict_entry
 
 
-from project.rl.action_definition import (
-    action_increase_aging, 
-    action_decrease_aging
-    , action_evict_entry,
-    action_rebalance_table
-    )
+# from project.rl.action_definition import (
+#     action_increase_aging, 
+#     action_decrease_aging
+#     , action_evict_entry,
+#     action_rebalance_table
+#     )
 
 
 if __name__ == "__main__":
     sw = "g0_s1"
-    # entries = monitor(sw)
-    # print(entries)
+    
     # action_increase_aging(sw)
     # action_decrease_aging(sw)
     # action_evict_entry(sw, policy="LFU")

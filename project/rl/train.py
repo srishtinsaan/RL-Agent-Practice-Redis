@@ -5,6 +5,7 @@ from project.rl.env import LiveEnv
 from project.rl.states import LiveStateEncoder
 from project.rl.agent import QAgent
 
+
 def run_live_training(switch='g0_s0', episodes=200, steps_per_ep=30):
     # ep = 200
     # steps = 30
@@ -178,26 +179,27 @@ def run_live_training(switch='g0_s0', episodes=200, steps_per_ep=30):
             
         print(f"Ep {ep+1} | Discounted Return G: {G:.4f}")
 
-        with open(episode_log_path, 'a', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow([ep + 1, round(G, 4), round(total_reward, 4), round(agent.epsilon, 4)])
-
-        agent.decay_epsilon()
-        rewards_history.append(total_reward)
-
-        # Final q table generated after training
-        print(f"\nEp {ep+1}/{episodes} | Total Reward: {total_reward:+.2f}\n")
-
         with open(qtable_path, 'w', newline='') as f:
             writer = csv.writer(f)
-            writer.writerow(['State_Index', 'mac_bin', 'flood_bin', 'age_bin',
-                             'Q_EVICT',  'Q_INC_AGE', 'Q_DEC_AGE', 'Q_REBALANCE'])
+
+            writer.writerow([
+            'State_Index',
+            'Q_EVICT',
+            'Q_INC_AGE',
+            'Q_DEC_AGE',
+            'Q_REBALANCE'
+            ])
+
             for state_idx in range(encoder.total_states()):
-                m, fl, a = encoder.decode_state_index(state_idx)
+
                 q = agent.get_q_values(state_idx)
+
                 writer.writerow([
-                    state_idx, m, fl, a,
-                    round(q[0],4), round(q[1],4), round(q[2],4), round(q[3],4)
+                    state_idx,
+                    round(q[0], 4),
+                    round(q[1], 4),
+                    round(q[2], 4),
+                    round(q[3], 4)
                 ])
 
 

@@ -15,6 +15,8 @@ net = None
 try:
     net = topology()
     net.start()
+    for h in net.hosts:
+        print(h.name)
 
     # get info about port
     info = discover_switch_ports(net, "g0_s1")

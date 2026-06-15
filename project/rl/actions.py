@@ -2,9 +2,9 @@ class ActionSpace:
 
     ACTIONS = {
         0: "EVICT",
-        2: "INCREASE_AGING",
-        3: "DECREASE_AGING",
-        4: "REBALANCE"
+        1: "INCREASE_AGING",
+        2: "DECREASE_AGING",
+        3: "REBALANCE"
     }
 
     @staticmethod

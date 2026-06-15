@@ -2,11 +2,11 @@ import subprocess
 import redis
 import json
 
-from project.monitor import get_mac_table_entries
+from project.get_data import (
+    get_mac_table,       
+)
 
 r = redis.Redis(host='localhost', port=6379, decode_responses=True)
-
-
 
 AGING_HIGH       = 600
 AGING_LOW        = 60
@@ -28,38 +28,23 @@ def run_cmd(cmd):
         # IMPORTANT: don't crash RL training
         return None
 
-def action_evict_entry(sw, policy="LRU"):
-    mac_entries = get_mac_table_entries(sw)
+def action_evict_entry(sw, flood_pressure):
+
+    mac_entries = get_mac_table(sw)
 
     if not mac_entries:
-        print("[EVICT] No MAC entries found")
         return None
+
+    if flood_pressure > 0.6:
+        policy = "LFU"   
+    else:
+        policy = "LRU"   
 
     if policy == "LRU":
-        stale_mac, stale_entry = init_lru_eviction(mac_entries)
-
-    elif policy == "LFU":
-        stale_mac, stale_entry = init_lfu_eviction(mac_entries)
+        return init_lru_eviction(mac_entries)
 
     else:
-        print("[EVICT] Unknown policy")
-        return None
-
-    if not stale_mac:
-        return None
-
-    print(
-        f"[EVICT-{policy}] MAC {stale_mac} "
-        f"(age={stale_entry.get('age', 0)}, seen={stale_entry.get('seen_count', 0)})"
-    )
-
-    # IMPORTANT: actually apply eviction to Redis
-    pipe = r.pipeline()
-    pipe.hdel(HASH_KEY, stale_mac)
-    pipe.zrem(ZSET_KEY, stale_mac)
-    pipe.execute()
-
-    return stale_mac
+        return init_lfu_eviction(mac_entries)
 
 def init_lru_eviction(mac_entries):
     if not mac_entries:
@@ -97,79 +82,66 @@ def action_decrease_aging(sw):
 
     return new_limit
 
-def calculate_importance(entry, protected_ports=None):
-    if protected_ports is None:
-        protected_ports = []
-
-    port = entry.get("port", "")
-
-    if port in protected_ports:
-        return float('inf')
+def calculate_importance(entry):
 
     age = entry.get("age", 0)
     seen_count = entry.get("seen_count", 1)
 
     return seen_count + (age * 0.01)
 
-def action_rebalance_table(target_utilization=0.5, protected_ports=None):
-    if protected_ports is None:
-        protected_ports = []
+def action_rebalance_table(target_size=10):
 
-    current_count = r.hlen(HASH_KEY)
+    current_entries = r.hlen(HASH_KEY)
 
-    target_size = max(1, int(current_count * target_utilization))
-
-    if current_count <= target_size:
+    if current_entries <= target_size:
         print("[ACTION] REBALANCE — no cleanup needed")
-        return 0, []
+        return 0
 
-    remove_count = current_count - target_size
-
-    all_data = r.hgetall(HASH_KEY)
+    remove_count = current_entries - target_size
 
     entries = []
 
-    for mac, raw in all_data.items():
+    for mac, raw in r.hgetall(HASH_KEY).items():
+
         try:
             entry = json.loads(raw)
         except:
             continue
 
-        score = calculate_importance(entry, protected_ports)
+        score = calculate_importance(entry)
+
         entries.append((mac, score))
 
     entries.sort(key=lambda x: x[1])
 
     pipe = r.pipeline()
     removed = 0
-    removed_macs = []
 
     for mac, _ in entries[:remove_count]:
+
         pipe.hdel(HASH_KEY, mac)
         pipe.zrem(ZSET_KEY, mac)
-        removed_macs.append(mac)
+
         removed += 1
 
     pipe.execute()
 
-    print(f"[ACTION] REBALANCE — removed {removed} entries: {removed_macs}")
+    print(f"[ACTION] REBALANCE — removed {removed} entries")
 
-    return removed, removed_macs
+    return removed
 
-def execute_action(sw, action_idx, protected_ports=None):
-    if protected_ports is None:
-        protected_ports = []
+def execute_action(sw, action_idx, flood_pressure):
 
     evicted_mac = None
 
     if action_idx == 0:
-        evicted_mac = action_evict_entry(sw, policy="LRU")
+        evicted_mac = action_evict_entry(sw, flood_pressure)
     elif action_idx == 1:
         action_increase_aging(sw)
     elif action_idx == 2:
         action_decrease_aging(sw)
     elif action_idx == 3:
-        action_rebalance_table(protected_ports=protected_ports)  
+        action_rebalance_table()  
     else:
         print(f"[EXECUTE] Unknown action: {action_idx}")
 

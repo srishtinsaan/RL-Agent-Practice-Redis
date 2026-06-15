@@ -36,7 +36,6 @@ def fdb_refresh_loop(switch_name, interval=1):
 
         time.sleep(interval)
 
-
 def bootstrap_learning(net):
     """
     One-time startup traffic so switch learns some MACs.
@@ -62,7 +61,6 @@ def bootstrap_learning(net):
 
     print("[BOOTSTRAP] Done")
 
-
 def random_keepalive(net):
     """
     Very light refresh traffic.
@@ -84,7 +82,6 @@ def random_keepalive(net):
         src.cmd(f"ping -c 1 {dst.IP()} > /dev/null 2>&1 &")
 
     print(f"[KEEPALIVE] Refreshed {len(hosts)} hosts")
-
 
 def start_user_session(net):
     """
@@ -128,7 +125,6 @@ def start_user_session(net):
         f"for {duration}s"
     )
 
-
 def start_burst(net):
     """
     Simulate a busy period.
@@ -166,7 +162,6 @@ def start_burst(net):
         src.cmd(f"timeout {duration} ping -i 0.5 {dst.IP()} > /dev/null 2>&1 &")
 
     print(f"[BURST] {num_flows} flows started")
-
 
 def keepalive(net):
 

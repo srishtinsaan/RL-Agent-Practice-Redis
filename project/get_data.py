@@ -7,9 +7,20 @@ import csv
 r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 #print(r.ping()) 
 
-with open("stat.csv", 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(['Occupancy', 'Flood', 'Age']) 
+# stats
+import os
+
+BASE_DIR  = os.path.dirname(os.path.abspath(__file__))
+STATS_DIR = os.path.join(BASE_DIR, "network_stats")
+
+# print(f"[DEBUG] BASE_DIR  = {BASE_DIR}")
+# print(f"[DEBUG] STATS_DIR = {STATS_DIR}")
+
+os.makedirs(STATS_DIR, exist_ok=True)
+STAT_CSV  = os.path.join(STATS_DIR, "stat.csv")      
+
+STAT_CSV = os.path.join(STATS_DIR, "stat.csv")
+
         
 HASH_KEY = "mac_table"
 ZSET_KEY = "mac_age"
@@ -142,13 +153,14 @@ def print_table():
         )
     print(f"{'MAC':<25} {'PORT':<10} {'AGE':<10} {'seen_count':<10}")
     print("-" * 60)
-    with open("stat.csv", 'a', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow([
-                f"{fill:.3f}",
-                f"{fpressure:.3f}",
-                f"{agescore:.3f}"
-                ])
+
+    with open(STAT_CSV, 'a', newline='') as f:      # ← was missing
+        writer = csv.writer(f)
+        writer.writerow([
+            f"{fill:.3f}",
+            f"{fpressure:.3f}",
+            f"{agescore:.3f}"
+        ])
 
     for mac, score in r.zrevrange(ZSET_KEY, 0, -1, withscores=True):
         data = all_data.get(mac)
@@ -167,11 +179,11 @@ def get_ageScore(mac_entries):
 def mac_fill(mac_entries):
     return normalize(len(mac_entries), MAX_MAC_CAPACITY)
 
-def flood_pressure(new_entries):
+def flood_pressure(new_entries, prev_entries=None):
     global previous_snapshot
 
     # previous snapshot (t-1)
-    prev_macs = set(previous_snapshot.keys())
+    prev_macs = set((prev_entries if prev_entries is not None else previous_snapshot).keys())
 
     # current snapshot (t)
     new_macs = set(new_entries.keys())
@@ -193,7 +205,24 @@ def normalize(value, max_value):
         return 0
     return round(min(value / max_value, 1.0), 4)
 
+def get_normalized_state(sw, prev_entries=None):
+    mac_entries = get_mac_table(sw)
+
+    mac_fill_val = normalize(len(mac_entries), MAX_MAC_CAPACITY)
+
+    flood_val    = flood_pressure(mac_entries, prev_entries)
+
+    age_val      = get_ageScore(mac_entries)
+
+    return mac_fill_val, flood_val, age_val, mac_entries 
+
+def init_csv():
+    with open(STAT_CSV, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(['Occupancy', 'Flood', 'Age'])
+
 if __name__ == "__main__":
+    init_csv() 
     running = True
     try:
         while running:

@@ -5,17 +5,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from project.monitor import (
-    get_mac_table_entries,
-    get_flood_pressure,
-    get_average_entry_age,
-    normalize,
-    MAX_MAC_CAPACITY,
-    MAX_ENTRY_AGE
+from project.get_data import (
+    get_normalized_state,
+    mac_fill,
+    flood_pressure,
+    get_ageScore,
 )
 
 from project.rl.action_definition import execute_action
-
 from project.rl.reward import get_reward
 from project.rl.actions import ActionSpace
 
@@ -27,6 +24,9 @@ from project.rl.actions import ActionSpace
 
 class LiveEnv:
     def __init__(self, switch=None):
+        self.switch = switch or "g0_s1"
+        self.prev_mac_entries = {}
+        print(f"[OK] env.py :: Connected to switch: {self.switch}")
 
         try:
             bridges = subprocess.check_output(
@@ -34,56 +34,35 @@ class LiveEnv:
             ).split()
             if not bridges:
                 raise RuntimeError(
-                    "\n[ERROR] No OVS switches found.\n"
-                    "Start Mininet first: sudo python3 dragonfly.py\n"
-                    "Then run the RL agent in a separate terminal."
+                    "No OVS switches found. Start Mininet first."
                 )
-            self.switch = switch or "g0_s1"
-            print(f"[OK] Connected to switch: {self.switch}")
+            
 
         except FileNotFoundError:
             raise RuntimeError(
                 "\n[ERROR] ovs-vsctl not found.\n"
-                "Are you running inside WSL with OVS installed?"
             )
-
-        # load topology info
-        import os
-        import json
-
-        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-        file_path = os.path.join(BASE_DIR, "topology_info.json")
-
-        with open(file_path, "r") as f:
-            topology = json.load(f)
-
-        self.uplink_ports = topology["uplink_ports"]
+           
         
     def get_live_state(self):
 
-        mac_entries = get_mac_table_entries(self.switch)
+        mac_fill_val, flood_val, age_val, mac_entries = get_normalized_state(
+            self.switch,
+            self.prev_mac_entries    # ← pass previous snapshot
+        )
 
-        mac_fill = normalize(len(mac_entries),MAX_MAC_CAPACITY)
-
-        flood_pressure = get_flood_pressure(self.switch)
-
-        avg_age = get_average_entry_age(self.switch)
-
-        
-
+        self.prev_mac_entries = mac_entries   
 
         return {
-            "mac_fill": mac_fill,
-            "flood_pressure": flood_pressure,
-            "avg_age": avg_age,
-            "mac_entries": mac_entries
+            "mac_fill":       mac_fill_val,
+            "flood_pressure": flood_val,
+            "avg_age":        age_val,
+            "mac_entries":    mac_entries
         }
     
     def step(self, action):
 
         state_info = self.get_live_state()
-
         original_action = action
 
     #
@@ -95,24 +74,16 @@ class LiveEnv:
 
         executed_action = action
 
-        result = execute_action(self.switch, executed_action, protected_ports=self.uplink_ports)
+        result = execute_action(self.switch, executed_action, state_info["flood_pressure"])
 
-        if executed_action in [0, 1]:
-            time.sleep(3)
-        else:
-            time.sleep(1)
-
+        # if executed_action in [0, 1]:
+        #     time.sleep(3)
+        # else:
+        time.sleep(1)
         next_state_info = self.get_live_state()
 
-        fill_change = (
-            next_state_info["mac_fill"]
-            - state_info["mac_fill"]
-        )
-
-        flood_change = (
-            next_state_info["flood_pressure"]
-            - state_info["flood_pressure"]
-        )
+        fill_change  = round(next_state_info["mac_fill"]       - state_info["mac_fill"],       4)
+        flood_change = round(next_state_info["flood_pressure"] - state_info["flood_pressure"], 4)
 
         print(
         f"[STATE] "
@@ -136,53 +107,36 @@ class LiveEnv:
             old_age=state_info["avg_age"],
             new_age=next_state_info["avg_age"],
 
-            all_ports_blocked=False
         )
+
+        
+
+        
+
+        
 
     #
     # Penalty if eviction found nothing
     #
-        if (
-            executed_action in [0, 1]
-            and result is None
-        ):
-            reward -= 1.0
+        # if (
+        #     executed_action in [0, 1]
+        #     and result is None
+        # ):
+        #     reward -= 1.0
 
         info = {
-            "action_name":
-                ActionSpace.get_action_name(
-                executed_action
-            ),
-
-            "original_action":
-                original_action,
-
-            "executed_action":
-                executed_action,
-
-            "mac_count":
-                len(next_state_info["mac_entries"]),
-
-            "mac_fill":
-                next_state_info["mac_fill"],
-
-            "fill_change":
-                round(fill_change, 4),
-
-            "flood_pressure":
-                next_state_info["flood_pressure"],
-
-            "flood_change":
-                round(flood_change, 4),
-
-            "outcome":
-                outcome,
-
-            "situation":
-                situation,
-
-            "action_result":
-                result if result else "N/A"
+            "action_name":     ActionSpace.get_action_name(executed_action),
+            "original_action": original_action,
+            "executed_action": executed_action,
+            "mac_count":       len(next_state_info["mac_entries"]),
+            "mac_fill":        next_state_info["mac_fill"],
+            "fill_change":     fill_change,
+            "flood_pressure":  next_state_info["flood_pressure"],
+            "flood_change":    flood_change,
+            "avg_age":         next_state_info["avg_age"],
+            "outcome":         outcome,
+            "situation":       situation,
+            "action_result":   result if result else "N/A"
         }
-
+        
         return next_state_info, reward, info

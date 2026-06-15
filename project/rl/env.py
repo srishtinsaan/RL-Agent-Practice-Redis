@@ -20,6 +20,7 @@ from project.rl.actions import ActionSpace
 """
 
 class LiveEnv:
+    
     def __init__(self, switch=None):
         self.switch = switch or "g0_s1"
         self.prev_mac_entries = {}

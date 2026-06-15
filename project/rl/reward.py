@@ -1,4 +1,3 @@
-
 def get_reward(
     old_fill,
     new_fill,
